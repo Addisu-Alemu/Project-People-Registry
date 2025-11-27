@@ -44,6 +44,12 @@ export default function ProjectList({ projects, people, refresh, API }) {
         >
           +
         </button>
+        <a
+          className="btn btn-sm btn-outline-success ms-2"
+          href="http://localhost:8000/export/projects"
+        >
+          📥 CSV
+        </a>
       </h3>
       {showNew && (
         <div className="card p-2 mb-2">
