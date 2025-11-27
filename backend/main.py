@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from database import get_db, engine
 import models, schemas, crud
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Response
+from fastapi.responses import StreamingResponse
+import crud
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Project-People Registry")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -29,3 +32,19 @@ def delete_project(prid: int, db: Session = Depends(get_db)): crud.delete_projec
 def assign(prid: int, pid: int, db: Session = Depends(get_db)): crud.assign_person(db, prid, pid)
 @app.delete("/projects/{prid}/people/{pid}")
 def unassign(prid: int, pid: int, db: Session = Depends(get_db)): crud.unassign_person(db, prid, pid)
+
+@app.get("/export/projects")
+def export_projects(db: Session = Depends(get_db)):
+    return StreamingResponse(
+        crud.iter_projects_csv(db),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=projects.csv"}
+    )
+
+@app.get("/export/people")
+def export_people(db: Session = Depends(get_db)):
+    return StreamingResponse(
+        crud.iter_people_csv(db),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=people.csv"}
+    )

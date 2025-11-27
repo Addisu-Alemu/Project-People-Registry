@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 import models, schemas
+import csv, io  # std-lib
 # People
 def get_people(db: Session): return db.query(models.Person).all()
 def get_person(db: Session, pid: int): return db.get(models.Person, pid)
@@ -23,3 +24,15 @@ def assign_person(db: Session, prid: int, pid: int):
     db_pr = get_project(db, prid); db_p = get_person(db, pid); db_pr.people.append(db_p); db.commit()
 def unassign_person(db: Session, prid: int, pid: int):
     db_pr = get_project(db, prid); db_p = get_person(db, pid); db_pr.people.remove(db_p); db.commit()
+
+
+def iter_projects_csv(db: Session):
+    yield "ID,Title,Description,Owner\n"
+    for p in db.query(models.Project).all():
+        owner = db.get(models.Person, p.owner_id)
+        yield f"{p.id},\"{p.title}\",\"{p.description or ''}\",\"{owner.name if owner else ''}\"\n"
+
+def iter_people_csv(db: Session):
+    yield "ID,Name,Email,Role\n"
+    for p in db.query(models.Person).all():
+        yield f"{p.id},\"{p.name}\",\"{p.email}\",\"{p.role or ''}\"\n"
