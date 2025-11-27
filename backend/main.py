@@ -1,10 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
+
+import traceback
 from sqlalchemy.orm import Session
 from database import get_db, engine
 import models, schemas, crud
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Response
 from fastapi.responses import StreamingResponse
+from typing import List
 import crud
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Project-People Registry")
@@ -48,3 +51,24 @@ def export_people(db: Session = Depends(get_db)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=people.csv"}
     )
+
+# @app.post("/projects/{pid}/people/bulk")
+# def bulk_assign(pid: int, person_ids: List[int], db: Session = Depends(get_db)):
+#     for pid_ins in person_ids:
+#         # skip if already assigned
+#         exists = db.query(models.project_person).filter_by(project_id=pid, person_id=pid_ins).first()
+#         if not exists:
+#             crud.assign_person(db, pid, pid_ins)
+#     return {"ok": True}
+
+
+@app.post("/projects/{pid}/bulk/people")
+def bulk_assign(pid: int, person_ids: List[int], db: Session = Depends(get_db)):
+    try:
+        for pid_ins in person_ids:
+            exists = db.query(models.project_person).filter_by(project_id=pid, person_id=pid_ins).first()
+            if not exists:
+                crud.assign_person(db, pid, pid_ins)
+        return {"ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e) + "  " + traceback.format_exc())

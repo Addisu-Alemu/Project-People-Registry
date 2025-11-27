@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
+import BulkAssignModal from "./BulkAssignModal";
 
 export default function ProjectList({ projects, people, refresh, API }) {
   const [showNew, setShowNew] = useState(false);
+  const [bulkProject, setBulkProject] = useState(null);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -129,6 +132,12 @@ export default function ProjectList({ projects, people, refresh, API }) {
                     </option>
                   ))}
               </select>
+              <button
+                className="btn btn-sm btn-outline-primary ms-1"
+                onClick={() => setBulkProject(pr)}
+              >
+                Bulk assign
+              </button>
             </div>
             <ul className="mt-1">
               {pr.people.map((p) => (
@@ -146,7 +155,20 @@ export default function ProjectList({ projects, people, refresh, API }) {
           </li>
         ))}
       </ul>
-
+      {bulkProject && (
+        <BulkAssignModal
+          show={true}
+          onClose={() => setBulkProject(null)}
+          project={bulkProject}
+          people={people}
+          assignedIds={bulkProject.people.map((p) => p.id)}
+          API={API}
+          onDone={() => {
+            refresh();
+            setBulkProject(null);
+          }}
+        />
+      )}
       {sel && (
         <div className="card p-2 mt-2">
           <h5>Edit Project</h5>
@@ -172,7 +194,13 @@ export default function ProjectList({ projects, people, refresh, API }) {
                 {p.name}
               </option>
             ))}
-          </select>
+          </select>{" "}
+          <button
+            className="btn btn-sm btn-outline-primary ms-1"
+            onClick={() => setBulkProject(pr)} // store current project
+          >
+            Bulk assign
+          </button>
           <button className="btn btn-success btn-sm" onClick={update}>
             Save
           </button>
